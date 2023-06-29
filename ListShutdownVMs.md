@@ -13,11 +13,11 @@ One way of looking at the data is to look for the action DEALLOCATE:
 ```
 AzureActivity
 | where ResourceProviderValue == 'MICROSOFT.COMPUTE'
-| where CategoryValue == 'ResourceHealth'
+| where CategoryValue == 'Administrative'
 | sort by TimeGenerated desc 
 | extend prop= parse_json(Properties)
 | summarize arg_max(TimeGenerated, *) by _ResourceId
-| where prop.currentHealthStatus != 'Available'
+| where OperationNameValue == 'MICROSOFT.COMPUTE/VIRTUALMACHINES/DEALLOCATE/ACTION'
 | project ShutdownTime=TimeGenerated, VMName=prop.resource, ShutdownFor=datetime_diff('minute', now(), TimeGenerated)
 ```
 
