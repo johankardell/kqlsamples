@@ -39,3 +39,16 @@ In my tests these two queries have given me the same result, but I have not trie
 That should however do it. The downside with this solution is that we don't tend to save the data in Log analytics for very long (since it may become expensive for large amoutns of data).
 
 If you run these queries on a Log analytics workspace, remember to set the time range to a higher value than the default.
+
+Another usecase could be if you would like to list all VMs that have been shutdown for more than a day:
+```
+AzureActivity
+| where ResourceProviderValue == 'MICROSOFT.COMPUTE'
+| where CategoryValue == 'Administrative'
+| sort by TimeGenerated desc 
+| extend prop= parse_json(Properties)
+| summarize arg_max(TimeGenerated, *) by _ResourceId
+| where OperationNameValue == 'MICROSOFT.COMPUTE/VIRTUALMACHINES/DEALLOCATE/ACTION'
+| project ShutdownTime=TimeGenerated, VMName=prop.resource, ShutdownFor=datetime_diff('day', now(), TimeGenerated)
+| where ShutdownFor >1
+```
